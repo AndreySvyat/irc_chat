@@ -4,7 +4,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
 
 
-class EchoServer: ChannelInboundHandlerAdapter() {
+class EchoHandler: ChannelInboundHandlerAdapter() {
 
     override fun channelRead(ctx: ChannelHandlerContext?, msg: Any) {
         ctx?.writeAndFlush(msg)
