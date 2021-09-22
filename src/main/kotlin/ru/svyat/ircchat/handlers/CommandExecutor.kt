@@ -4,7 +4,6 @@ import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelInboundHandlerAdapter
-import io.netty.util.ReferenceCountUtil
 import ru.svyat.ircchat.command.Commander
 import ru.svyat.ircchat.command.byVal
 import ru.svyat.ircchat.logger
@@ -15,18 +14,16 @@ class CommandExecutor
 
     private val commander: Commander = Commander()
 
-    override fun channelRead(ctx: ChannelHandlerContext?, msg: Any?) {
-        if (msg !is ByteBuf) {
-            ctx?.fireChannelRead(msg)
-            return
-        }
+    override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
+        if (msg !is ByteBuf) throw RuntimeException("Unsupported message type")
+
         val commandMsg = msg.toString(charSet).trim()
         if (commandMsg.isEmpty()) {
-            ctx?.fireChannelRead(msg)
+            ctx.fireChannelRead(msg)
             return
         }
         if (commandMsg.first() != '/') {
-            ctx?.fireChannelRead(msg)
+            ctx.fireChannelRead(msg)
             return
         }
         logger.info("Get command $commandMsg")
@@ -36,12 +33,17 @@ class CommandExecutor
         if (commandEnd > 0) {
             args = commandMsg.substring(commandMsg.indexOfFirst { it == ' ' } + 1).split(' ').toTypedArray()
         }
-        val outMsg = Unpooled.wrappedBuffer(("Welcome ${commander.executeCommand(byVal(command), *args)}\n").toByteArray(charSet))
-        ctx?.writeAndFlush(outMsg)
+        val outMsg =
+            Unpooled.wrappedBuffer(("${commander.executeCommand(byVal(command), ctx, *args)}\n").toByteArray(charSet))
+        ctx.writeAndFlush(outMsg)
     }
 
-    override fun exceptionCaught(ctx: ChannelHandlerContext?, cause: Throwable?) {
-        logger.warn(cause?.localizedMessage, cause)
-        ctx?.close()
+    override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+        handleException(ctx, cause as Exception)
+    }
+
+    override fun channelInactive(ctx: ChannelHandlerContext) {
+        removeUser(ctx)
+        super.channelInactive(ctx)
     }
 }

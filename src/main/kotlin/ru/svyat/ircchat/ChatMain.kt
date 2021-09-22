@@ -1,7 +1,5 @@
 package ru.svyat.ircchat
 
-import ru.svyat.ircchat.startServer
-
 class ChatMain
 
 fun main(args: Array<String>){

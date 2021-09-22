@@ -1,14 +1,15 @@
 package ru.svyat.ircchat.observer
 
 import io.netty.buffer.Unpooled
+import ru.svyat.ircchat.model.EMPTY_TOPIC
 import ru.svyat.ircchat.model.Message
 import ru.svyat.ircchat.model.Topic
 import ru.svyat.ircchat.model.User
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
-class TopicObservable(private val topic: Topic) {
-    private val subscribers: ConcurrentHashMap<Subscriber, Any> = ConcurrentHashMap()
+class TopicSubscription(private val topic: Topic) {
+    private val subscribers: ConcurrentHashMap<String, Subscriber> = ConcurrentHashMap()
 
     fun subscribe(user: User) {
         if (subscribers.size >= 10) {
@@ -20,7 +21,7 @@ class TopicObservable(private val topic: Topic) {
             user.channelContext.writeAndFlush("You are already joined to channel ${topic.name}")
             return
         }
-        subscribers[sub] = Object()
+        subscribers[user.login] = sub
         sub.onSubscribe(topic.history)
     }
 
@@ -31,9 +32,23 @@ class TopicObservable(private val topic: Topic) {
             user
         )
 
-        subscribers.forEach { (subscriber, _) -> subscriber.onMessageIncome(msg) }
+        subscribers.forEach { (_, subscriber) -> subscriber.onMessageIncome(msg) }
         topic.history.add(msg)
     }
+
+    fun leave(user: User) {
+        subscribers.remove(user.login)
+    }
+
+    fun users(user: User) {
+        subscribers.forEach {
+            user.channelContext.writeAndFlush(it.key)
+        }
+    }
+
+    fun isEmptyTopic() = topic == EMPTY_TOPIC
+
+    fun getTopicName(): String = topic.name
 }
 
 class Subscriber(private val user: User) {
@@ -47,8 +62,4 @@ class Subscriber(private val user: User) {
         val msg = "$prettyTime: $userName: ${message.message}"
         user.channelContext.writeAndFlush(Unpooled.wrappedBuffer(msg.toByteArray()))
     }
-
-    override fun hashCode(): Int = user.hashCode()
-
-    override fun equals(other: Any?): Boolean = user == other
 }

@@ -7,6 +7,7 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import ru.svyat.ircchat.handlers.CommandExecutor
 import ru.svyat.ircchat.handlers.EchoHandler
+import ru.svyat.ircchat.handlers.MessageExecutor
 import java.nio.charset.Charset
 
 fun startServer(port: Int) {
@@ -20,6 +21,7 @@ fun startServer(port: Int) {
                 override fun initChannel(channel: SocketChannel) {
                     channel.pipeline()
                         .addLast(CommandExecutor(Charset.defaultCharset()))
+                        .addLast(MessageExecutor(Charset.defaultCharset()))
                         .addLast(EchoHandler())
                 }
             })
