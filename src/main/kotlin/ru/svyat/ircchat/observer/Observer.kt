@@ -32,7 +32,11 @@ class TopicSubscription(private val topic: Topic) {
             user
         )
 
-        subscribers.forEach { (_, subscriber) -> subscriber.onMessageIncome(msg) }
+        subscribers.forEach { (_, subscriber) ->
+            if (user != subscriber.user) {
+                subscriber.onMessageIncome(msg)
+            }
+        }
         topic.history.add(msg)
     }
 
@@ -51,7 +55,7 @@ class TopicSubscription(private val topic: Topic) {
     fun getTopicName(): String = topic.name
 }
 
-class Subscriber(private val user: User) {
+class Subscriber(val user: User) {
     fun onSubscribe(messages: List<Message>) {
         messages.forEach { message -> onMessageIncome(message) }
     }

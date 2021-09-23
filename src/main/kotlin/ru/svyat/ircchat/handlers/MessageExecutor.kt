@@ -10,9 +10,9 @@ class MessageExecutor(private val charSet: Charset) : ChannelInboundHandlerAdapt
     override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
         if (msg !is ByteBuf) throw RuntimeException("Unsupported message type")
 
-        val user = findUser(ctx)
+        val user = findUser(ctx.channel())
         val subscription = user.getLastSubscription()
-        subscription.addMessage(msg.toString(charSet).trim(), user)
+        subscription.addMessage(msg.toString(charSet).trim() + "\n", user)
     }
 
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {

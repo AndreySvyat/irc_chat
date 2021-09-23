@@ -9,8 +9,7 @@ import ru.svyat.ircchat.command.byVal
 import ru.svyat.ircchat.logger
 import java.nio.charset.Charset
 
-class CommandExecutor
-    (private val charSet: Charset) : ChannelInboundHandlerAdapter() {
+class CommandExecutor (private val charSet: Charset) : ChannelInboundHandlerAdapter() {
 
     private val commander: Commander = Commander()
 

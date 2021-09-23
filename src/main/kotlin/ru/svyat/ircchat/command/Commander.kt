@@ -16,11 +16,11 @@ class Commander {
     init {
         commands[CommandName.LOGIN] = Command { context, args ->
             val login = args[0]
-            if (users.contains(login)) {
+            if (users.values.any { v -> v.login == login }) {
                 throw RuntimeException("User $login already exists. Please select another login")
             }
             val password = args[1]
-            users[context] = User(login, password, TopicSubscription(EMPTY_TOPIC), context)
+            users[context.channel()] = User(login, password, TopicSubscription(EMPTY_TOPIC), context)
             val log = "login user $login password ${password.replace(Regex("."), "*")}"
             logger.info(log)
             "Welcome ${args[0]}"
@@ -28,7 +28,7 @@ class Commander {
 
         commands[CommandName.JOIN] = Command { context, args ->
             val topicName = args[0]
-            val user = findUser(context)
+            val user = findUser(context.channel())
             if (topics[topicName] == null) {
                 topics[topicName] = TopicSubscription(Topic(topicName, CopyOnWriteArrayList(mutableListOf<Message>())))
             }
@@ -41,7 +41,7 @@ class Commander {
         }
 
         commands[CommandName.LEAVE] = Command { context, _ ->
-            val user = findUser(context)
+            val user = findUser(context.channel())
             val subscription = user.getLastSubscription()
             subscription.leave(user)
             val msg = "You have left ${subscription.getTopicName()}"
@@ -52,7 +52,7 @@ class Commander {
         commands[CommandName.USERS] = Command { context, _ ->
             val msg = "show users"
             logger.info(msg)
-            val user = findUser(context)
+            val user = findUser(context.channel())
             user.getLastSubscription().users(user)
             "That's all"
         }
