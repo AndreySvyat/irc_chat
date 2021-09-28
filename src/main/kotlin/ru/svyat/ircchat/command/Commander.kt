@@ -6,6 +6,7 @@ import ru.svyat.ircchat.data.topics
 import ru.svyat.ircchat.data.users
 import ru.svyat.ircchat.logger
 import ru.svyat.ircchat.model.*
+import ru.svyat.ircchat.observer.EMPTY_SUBSCRIPTION
 import ru.svyat.ircchat.observer.TopicSubscription
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
@@ -20,7 +21,7 @@ class Commander {
                 throw RuntimeException("User $login already exists. Please select another login")
             }
             val password = args[1]
-            users[context.channel()] = User(login, password, TopicSubscription(EMPTY_TOPIC), context)
+            users[context.channel()] = User(login, password, EMPTY_SUBSCRIPTION, context)
             val log = "login user $login password ${password.replace(Regex("."), "*")}"
             logger.info(log)
             "Welcome ${args[0]}"
@@ -30,7 +31,7 @@ class Commander {
             val topicName = args[0]
             val user = findUser(context.channel())
             if (topics[topicName] == null) {
-                topics[topicName] = TopicSubscription(Topic(topicName, CopyOnWriteArrayList(mutableListOf<Message>())))
+                topics[topicName] = TopicSubscription(Topic(topicName, CopyOnWriteArrayList(mutableListOf<Message>())), 10)
             }
             val subscription = topics[topicName]
             subscription!!.subscribe(user)

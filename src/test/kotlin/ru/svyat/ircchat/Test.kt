@@ -19,7 +19,7 @@ internal open class Test {
         @BeforeAll
         @JvmStatic
         fun init() {
-            val thread = Thread { startServer(6666) }
+            val thread = Thread { Server(6666).start() }
             thread.isDaemon = true
             thread.start()
         }
@@ -40,8 +40,8 @@ internal open class Test {
         private var socket: Socket = Socket()
 
         init {
-            val inetAddress = InetAddress.getByName("localhost");
-            val socketAddress = InetSocketAddress(inetAddress, 6666);
+            val inetAddress = InetAddress.getByName("localhost")
+            val socketAddress = InetSocketAddress(inetAddress, 6666)
             var connected = false
             val counter = AtomicInteger(0)
             while (!connected && counter.get() < 10) {

@@ -8,7 +8,10 @@ import ru.svyat.ircchat.model.User
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 
-class TopicSubscription(private val topic: Topic) {
+class TopicSubscription(
+    private val topic: Topic,
+    private val historySize: Int
+    ) {
     private val subscribers: ConcurrentHashMap<String, Subscriber> = ConcurrentHashMap()
 
     fun subscribe(user: User) {
@@ -38,6 +41,10 @@ class TopicSubscription(private val topic: Topic) {
             }
         }
         topic.history.add(msg)
+        if (topic.history.size >= historySize){
+            for (i in 0..topic.history.size - historySize)
+                topic.history.removeAt(i)
+        }
     }
 
     fun leave(user: User) {
@@ -67,3 +74,5 @@ class Subscriber(val user: User) {
         user.channelContext.writeAndFlush(Unpooled.wrappedBuffer(msg.toByteArray()))
     }
 }
+
+val EMPTY_SUBSCRIPTION = TopicSubscription(EMPTY_TOPIC, 0)
