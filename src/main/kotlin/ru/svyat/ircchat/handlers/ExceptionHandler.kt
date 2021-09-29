@@ -13,5 +13,7 @@ fun handleException(ctx: ChannelHandlerContext, cause: Exception) {
 
 fun removeUser(ctx: ChannelHandlerContext){
     val user = users.remove(ctx.channel())
-    user?.getLastSubscription()?.leave(user)
+    if(user != null && !user.lastSubscription.isEmptyTopic()){
+        user.lastSubscription.leave(user)
+    }
 }

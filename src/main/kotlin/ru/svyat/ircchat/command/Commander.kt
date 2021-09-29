@@ -22,7 +22,7 @@ class Commander {
             }
             val password = args[1]
             users[context.channel()] = User(login, password, EMPTY_SUBSCRIPTION, context)
-            val log = "login user $login password ${password.replace(Regex("."), "*")}"
+            val log = "login user $login"
             logger.info(log)
             "Welcome ${args[0]}"
         }
@@ -35,27 +35,24 @@ class Commander {
             }
             val subscription = topics[topicName]
             subscription!!.subscribe(user)
-            user.setLastSubscription(subscription)
-            val msg = "You have joined to channel $topicName"
-            logger.info(msg)
-            msg
+            user.lastSubscription = subscription
+            logger.info("${user.login} joined to $topicName")
+            "You joined to channel $topicName"
         }
 
         commands[CommandName.LEAVE] = Command { context, _ ->
             val user = findUser(context.channel())
-            val subscription = user.getLastSubscription()
+            val subscription = user.getLastNotEmptySubscription()
             subscription.leave(user)
-            val msg = "You have left ${subscription.getTopicName()}"
-            logger.info(msg)
-            msg
+            logger.info("${user.login} left ${subscription.getTopicName()}")
+            "You have left ${subscription.getTopicName()}"
         }
 
         commands[CommandName.USERS] = Command { context, _ ->
             val msg = "show users"
             logger.info(msg)
             val user = findUser(context.channel())
-            user.getLastSubscription().users(user)
-            "That's all"
+            user.getLastNotEmptySubscription().users().joinToString("\n") + "\n"
         }
     }
 

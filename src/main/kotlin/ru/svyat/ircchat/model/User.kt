@@ -6,15 +6,11 @@ import ru.svyat.ircchat.observer.TopicSubscription
 data class User(
     val login: String,
     val password: String,
-    private var lastSubscription: TopicSubscription,
+    var lastSubscription: TopicSubscription,
     val channelContext: ChannelHandlerContext
 ) {
-    fun setLastSubscription(topicSubscription: TopicSubscription){
-        this.lastSubscription = topicSubscription
-    }
-
-    fun getLastSubscription(): TopicSubscription {
-        if (lastSubscription.isEmptyTopic()) throw RuntimeException("Please join to any channel")
+    fun getLastNotEmptySubscription(): TopicSubscription {
+        if (lastSubscription.isEmptyTopic()) throw RuntimeException("User is not subscribed to any channel!")
         else return lastSubscription
     }
 }

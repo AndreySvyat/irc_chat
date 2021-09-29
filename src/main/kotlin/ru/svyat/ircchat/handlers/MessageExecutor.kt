@@ -11,7 +11,7 @@ class MessageExecutor(private val charSet: Charset) : ChannelInboundHandlerAdapt
         if (msg !is ByteBuf) throw RuntimeException("Unsupported message type")
 
         val user = findUser(ctx.channel())
-        val subscription = user.getLastSubscription()
+        val subscription = user.getLastNotEmptySubscription()
         subscription.addMessage(msg.toString(charSet).trim() + "\n", user)
     }
 
@@ -22,6 +22,5 @@ class MessageExecutor(private val charSet: Charset) : ChannelInboundHandlerAdapt
 
     override fun channelInactive(ctx: ChannelHandlerContext) {
         removeUser(ctx)
-        super.channelInactive(ctx)
     }
 }

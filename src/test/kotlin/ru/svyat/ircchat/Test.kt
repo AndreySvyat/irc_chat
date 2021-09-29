@@ -1,8 +1,10 @@
 package ru.svyat.ircchat
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import ru.svyat.ircchat.data.users
 import java.io.BufferedReader
 import java.io.BufferedWriter
 import java.io.InputStreamReader
@@ -12,8 +14,15 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.stream.Collectors
 
 internal open class Test {
+    private val testClients = mapOf(
+        Pair("login", Client("login", "123456")),
+        Pair("join", Client("join", "123456")),
+        Pair("leave", Client("leave", "123456")),
+        Pair("users", Client("users", "121234"))
+    )
 
     companion object {
         @BeforeAll
@@ -27,14 +36,45 @@ internal open class Test {
 
     @Test
     fun testLogin() {
-        val client = Client()
-        client.write("/login test 123456")
-        val result = client.readLine()
-        assertTrue(result == "Welcome test")
+        val client = testClients["login"]!!
+        val result = client.login()
+        assertTrue(result == "Welcome ${client.name}")
         client.close()
     }
 
-    internal class Client {
+    @Test
+    fun testJoin() {
+        val client = testClients["join"]!!
+        client.login()
+        val result = client.join("test_channel")
+        assertTrue(result == "You have joined to channel test_channel")
+        client.close()
+    }
+
+    @Test
+    fun testLeave() {
+        val client = testClients["leave"]!!
+        client.login()
+        client.join("test_channel")
+        val result = client.leave()
+        assertTrue(result == "You have left test_channel")
+        client.close()
+    }
+
+    @Test
+    fun testUsers() {
+        for (client in testClients.values) {
+            client.login()
+            client.join("channel")
+        }
+        val result = testClients["users"]?.users()!!
+        assertTrue(testClients.keys.toList().containsAll(result))
+    }
+
+    internal class Client(
+        val name: String,
+        val pwd: String
+    ) {
         private val bufferedWriter: BufferedWriter
         private val bufferedReader: BufferedReader
         private var socket: Socket = Socket()
@@ -65,13 +105,23 @@ internal open class Test {
 
         }
 
-        fun write(msg: String) {
+        private fun sendMessage(msg: String): String {
             bufferedWriter.write(msg)
             bufferedWriter.flush()
+            return bufferedReader.readLine()
         }
 
-        fun readLine(): String {
-            return bufferedReader.readLine()
+        fun login(): String = this.sendMessage("/login ${this.name} ${this.pwd}")
+        fun join(channel: String): String = this.sendMessage("/join $channel")
+        fun leave(): String = this.sendMessage("/leave")
+        fun users(): List<String> {
+            val users = mutableListOf<String>()
+            var line = sendMessage("/users")
+            while (line.isNotEmpty()){
+                users.add(line)
+                line = bufferedReader.readLine()
+            }
+            return users
         }
 
         fun close() {

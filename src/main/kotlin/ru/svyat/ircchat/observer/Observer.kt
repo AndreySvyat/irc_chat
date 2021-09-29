@@ -16,13 +16,11 @@ class TopicSubscription(
 
     fun subscribe(user: User) {
         if (subscribers.size >= 10) {
-            user.channelContext.writeAndFlush("There are to many clients on channel, wait for anyone leaves or choose another topic".toByteArray())
-            return
+            throw RuntimeException("There are to many clients on channel, wait for anyone leaves or choose another topic")
         }
         val sub = Subscriber(user)
         if (subscribers.contains(sub)) {
-            user.channelContext.writeAndFlush("You are already joined to channel ${topic.name}")
-            return
+            throw RuntimeException("You are already joined to channel ${topic.name}")
         }
         subscribers[user.login] = sub
         sub.onSubscribe(topic.history)
@@ -51,10 +49,8 @@ class TopicSubscription(
         subscribers.remove(user.login)
     }
 
-    fun users(user: User) {
-        subscribers.forEach {
-            user.channelContext.writeAndFlush(it.key)
-        }
+    fun users(): List<String> {
+        return subscribers.keys().toList()
     }
 
     fun isEmptyTopic() = topic == EMPTY_TOPIC

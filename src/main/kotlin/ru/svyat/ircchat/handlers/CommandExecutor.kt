@@ -43,6 +43,5 @@ class CommandExecutor (private val charSet: Charset) : ChannelInboundHandlerAdap
 
     override fun channelInactive(ctx: ChannelHandlerContext) {
         removeUser(ctx)
-        super.channelInactive(ctx)
     }
 }
